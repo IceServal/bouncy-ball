@@ -1,15 +1,21 @@
-import tkinter as tk
 import time    as tm
+import math    as mt
+import tkinter as tk
 
 
 # Global Variables
-SCALE = 30.0
-GRAVITY = 9.8 * SCALE
-CANVAS = None
-CANVAS_HEIGHT = 600
-CANVAS_WIDTH  = 800
-DELTA_TIME = 0.01
+PI              = 3.141592654
+SCALE           = 40.0
+GRAVITY         = 9.8 * SCALE
+CANVAS_HEIGHT   = 600
+CANVAS_WIDTH    = 800
+DELTA_TIME      = 0.01
 BOUNCY_BALL_NUM = 5
+
+
+# Tools
+def pow2(x):
+    return x * x
 
 
 # Structs
@@ -31,26 +37,28 @@ class Rectangle:
 class Bouncy_Ball:
     ''' a physic-based bouncy ball '''
 
-    def __init__(self, radius, x, y, x_speed, y_speed, width=1.0):
-        self.radius = radius
-        self.center = Point(x, y)
-        self.speed  = Point(x_speed, y_speed)
-        self.width  = width
+    def __init__(self, canvas, radius, density, x, y, x_velocity, y_velocity, width=1.0):
+        self.radius   = radius
+        self.density  = density
+        self.mass     = density * PI * pow2(radius)
+        self.center   = Point(x, y)
+        self.velocity = Point(x_velocity, y_velocity)
+        self.width    = width
 
         self.bounding_box = Rectangle(x - radius, y - radius, x + radius, y + radius)
-        self.id = CANVAS.create_oval(self.bounding_box.x1, self.bounding_box.y1,
+        self.id = canvas.create_oval(self.bounding_box.x1, self.bounding_box.y1,
                                      self.bounding_box.x2, self.bounding_box.y2,
                                      width=width)
 
     def update(self):
-        delta_speed   = Point(0.0, 0.0)
-        delta_speed.x = 0.0
-        delta_speed.y = GRAVITY * DELTA_TIME
+        delta_velocity   = Point(0.0, 0.0)
+        delta_velocity.x = 0.0
+        delta_velocity.y = GRAVITY * DELTA_TIME
 
-        self.center.x += (self.speed.x + 0.5 * delta_speed.x) * DELTA_TIME
-        self.center.y += (self.speed.y + 0.5 * delta_speed.y) * DELTA_TIME
-        self.speed.x += delta_speed.x
-        self.speed.y += delta_speed.y
+        self.center.x += (self.velocity.x + 0.5 * delta_velocity.x) * DELTA_TIME
+        self.center.y += (self.velocity.y + 0.5 * delta_velocity.y) * DELTA_TIME
+        self.velocity.x += delta_velocity.x
+        self.velocity.y += delta_velocity.y
 
         self.bounding_box = Rectangle(self.center.x - self.radius,
                                       self.center.y - self.radius,
@@ -58,13 +66,15 @@ class Bouncy_Ball:
                                       self.center.y + self.radius)
 
         # need change to use force analysis for real physic-based bouncy ball
-        if self.center.x + self.radius > CANVAS_WIDTH or self.center.x - self.radius < 0.0:
-            self.speed.x = -self.speed.x
-        if self.center.y + self.radius > CANVAS_HEIGHT:
-            self.speed.y = -self.speed.y
+        if  (self.center.x + self.radius > CANVAS_WIDTH and self.velocity.x > 0.0) \
+                or (self.center.x - self.radius < 0.0 and self.velocity.x < 0.0):
+            self.velocity.x = -self.velocity.x
+        if (self.center.y + self.radius > CANVAS_HEIGHT and self.velocity.y > 0.0) \
+                or (self.center.y - self.radius < 0.0 and self.velocity.y < 0.0):
+            self.velocity.y = -self.velocity.y
 
-    def render(self):
-        CANVAS.coords(self.id, [self.bounding_box.x1, self.bounding_box.y1,
+    def render(self, canvas):
+        canvas.coords(self.id, [self.bounding_box.x1, self.bounding_box.y1,
                                 self.bounding_box.x2, self.bounding_box.y2])
 
     def set_radius(self, radius):
@@ -81,44 +91,92 @@ class Bouncy_Ball:
         self.center.x += x_diff
         self.center.y += y_diff
 
+class Bouncy_World:
+    def __init__(self):
+        self.size = 0
+        self.ball_array = []
 
-# Tools
-def draw_call():
-    ''' draw elements on canvas '''
-    CANVAS.update_idletasks()
-    CANVAS.update()
+        self.board = tk.Tk()
+        self.board.title('bouncy world')
 
-def update(update_queue):
-    ''' object irrelevant update '''
-    for update_item in update_queue:
-        update_item.update()
+        self.canvas = tk.Canvas(self.board, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, bg='ivory')
+        self.canvas.pack()
 
-def render(render_queue):
-    ''' object irrelevant render '''
-    for render_item in render_queue:
-        render_item.render()
+    def add_ball(self, ball):
+        self.ball_array.append(ball)
+        self.size += 1
 
-    draw_call()
+    def mainloop(self):
+        while True:
+            tm.sleep(DELTA_TIME)
+
+            self._update()
+            self._render()
+            self._ball_collide()
+
+    def _update(self):
+        ''' ball attributes update '''
+        for ball in self.ball_array:
+            ball.update()
+
+    def _render(self):
+        ''' ball render '''
+        for ball in self.ball_array:
+            ball.render(self.canvas)
+
+        self._draw_call()
+
+    def _draw_call(self):
+        ''' draw elements on canvas '''
+        self.canvas.update_idletasks()
+        self.canvas.update()
+
+    def _ball_collide(self):
+        for i, b1 in enumerate(self.ball_array):
+            for j, b2 in enumerate(self.ball_array[(i + 1):]):
+                collide_vector = Point(b2.center.x - b1.center.x,
+                                       b2.center.y - b1.center.y)
+
+                distance = mt.sqrt(pow2(collide_vector.x) + pow2(collide_vector.y))
+                if distance > (b1.radius + b2.radius):
+                    continue
+
+                sin_theta = collide_vector.y / distance
+                cos_theta = collide_vector.x / distance
+
+                b1_normal_velocity  =   b1.velocity.x * cos_theta \
+                                      + b1.velocity.y * sin_theta
+                b1_tangent_velocity =   b1.velocity.x * sin_theta \
+                                      + b1.velocity.y * cos_theta
+                b2_normal_velocity  =   b2.velocity.x * cos_theta \
+                                      + b2.velocity.y * sin_theta
+                b2_tangent_velocity =   b2.velocity.x * sin_theta \
+                                      + b2.velocity.y * cos_theta
+
+                b1_momentum = b1.mass * b1_normal_velocity
+                b2_momentum = b2.mass * b2_normal_velocity
+                denom = b1.mass + b2.mass
+                b1_nom = (b1.mass - b2.mass) * b1_normal_velocity + 2 * b2_momentum
+                b2_nom = (b2.mass - b1.mass) * b2_normal_velocity + 2 * b1_momentum
+                b1_normal_velocity = b1_nom / denom
+                b2_normal_velocity = b2_nom / denom
+
+                b1.velocity.x =   b1_normal_velocity  * cos_theta \
+                                + b1_tangent_velocity * sin_theta
+                b1.velocity.y =   b1_normal_velocity  * sin_theta \
+                                + b1_tangent_velocity * cos_theta
+                b2.velocity.x =   b2_normal_velocity  * cos_theta \
+                                + b2_tangent_velocity * sin_theta
+                b2.velocity.y =   b2_normal_velocity  * sin_theta \
+                                + b2_tangent_velocity * cos_theta
 
 
 # Entrance
 if __name__ == '__main__':
-    board = tk.Tk()
-    board.title('bouncy ball')
-
-    CANVAS = tk.Canvas(board, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, bg='ivory')
-    CANVAS.pack()
-
-    update_queue = []
-    render_queue = []
+    bouncy_world = Bouncy_World()
     for i in range(BOUNCY_BALL_NUM):
-        bouncy_ball = Bouncy_Ball(20, 400, 100, -40.0 + i * 20.0, 0.0)
-        update_queue.append(bouncy_ball)
-        render_queue.append(bouncy_ball)
+        bouncy_ball = Bouncy_Ball(bouncy_world.canvas, 20, 10, 400 - 40 + i * 40, 100, -80.0 + i * 40.0, 20.0 * i)
+        bouncy_world.add_ball(bouncy_ball)
 
-    while True:
-        tm.sleep(DELTA_TIME)
-
-        update(update_queue)
-        render(render_queue)
+    bouncy_world.mainloop()
 
