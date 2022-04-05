@@ -78,29 +78,29 @@ class World:
                 b1 = m1.ball
                 b2 = m2.ball
 
-                delta_location = util.shapes.Point(
+                delta_position = util.shapes.Vector(
                     b2.center.x - b1.center.x,
                     b2.center.y - b1.center.y
                 )
-                delta_velocity = util.shapes.Point(
+                delta_velocity = util.shapes.Vector(
                     b2.velocity.x - b1.velocity.x,
                     b2.velocity.y - b1.velocity.y
                 )
                 if True \
-                    and ((delta_location.x * delta_velocity.x) >= 0) \
-                    and ((delta_location.y * delta_velocity.y) >= 0) \
+                    and ((delta_position.x * delta_velocity.x) >= 0) \
+                    and ((delta_position.y * delta_velocity.y) >= 0) \
                 :
                     continue
 
-                distance = delta_location.modulus()
+                distance = delta_position.modulus()
                 if distance > (m1.ball.radius + m2.ball.radius):
                     continue
                 if distance == 0.0:
                     continue
                 # need fix bug condition
 
-                sin_theta = delta_location.y / distance
-                cos_theta = delta_location.x / distance
+                sin_theta = delta_position.y / distance
+                cos_theta = delta_position.x / distance
 
                 b1_normal_velocity  =   b1.velocity.x * cos_theta \
                                       + b1.velocity.y * sin_theta
@@ -130,7 +130,7 @@ class World:
 
     def _ball_shift(self) -> None:
         for mesh in self.mesh_array:
-            delta_position   = util.shapes.Point(0.0, 0.0)
+            delta_position   = util.shapes.Vector(0.0, 0.0)
             delta_position.x = mesh.ball.velocity.x * resource.constants.DELTA_TIME
             delta_position.y = mesh.ball.velocity.y * resource.constants.DELTA_TIME
 

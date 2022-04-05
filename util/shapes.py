@@ -19,6 +19,25 @@ class Shape:
         return 0.0
 
 class Point(Shape):
+    def __init__(self, x: float, y: float) -> None:
+        self.x = x
+        self.y = y
+
+    def deploy(self, x: float, y: float) -> None:
+        self.x = x
+        self.y = y
+
+    def shift(self, x: float, y: float) -> None:
+        self.x += x
+        self.y += y
+
+    def scale(self, ratio: float) -> None:
+        pass
+
+    def area(self) -> float:
+        return 0.0
+
+class Vector(Shape):
     def __init__(self, x: float, y: float):
         self.x = x
         self.y = y

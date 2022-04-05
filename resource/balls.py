@@ -9,7 +9,7 @@ class Physical_Ball(util.shapes.Circle):
         , center: util.shapes.Point
         , radius: float
         , density: float
-        , velocity: util.shapes.Point
+        , velocity: util.shapes.Vector
     ):
         super().__init__(center, radius)
 
