@@ -48,7 +48,7 @@ class Mesh:
             print('No canvas to draw, use `set_canvas` method to set it.\n')
             return
         if self.id is None:
-            print('No oval created, use `create` method to create it.\n')
+            print('No entity created, use `create` method to create it.\n')
             return
 
         self.canvas.coords(
@@ -60,4 +60,8 @@ class Mesh:
                 self.bounding_box.y2 * resource.constants.SCALE,
             ]
         )
+
+    def shift(self, x: float, y: float) -> None:
+        self.ball.shift(x, y)
+        self.bounding_box.shift(x, y)
 

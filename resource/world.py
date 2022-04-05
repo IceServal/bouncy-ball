@@ -134,6 +134,5 @@ class World:
             delta_position.x = mesh.ball.velocity.x * resource.constants.DELTA_TIME
             delta_position.y = mesh.ball.velocity.y * resource.constants.DELTA_TIME
 
-            mesh.ball.shift(delta_position.x, delta_position.y)
-            mesh.bounding_box.shift(delta_position.x, delta_position.y)
+            mesh.shift(delta_position.x, delta_position.y)
 
