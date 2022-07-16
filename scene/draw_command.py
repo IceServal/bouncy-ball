@@ -1,19 +1,25 @@
 import tkinter
 
-import resource.balls
+import resource.particles
 import resource.constants
 import util.shapes
 
 
-class Mesh:
-    def __init__(self, ball: resource.balls.Physical_Ball):
-        self.ball = ball
+class Draw_Command:
+    def __init__(self, primitive):
+        self.primitive = primitive
         self.canvas = None
         self.border_width = 0.0
         self.id = None
 
-        left_up      = util.shapes.Point(ball.center.x - ball.radius, ball.center.y - ball.radius)
-        right_bottom = util.shapes.Point(ball.center.x + ball.radius, ball.center.y + ball.radius)
+        left_up = util.shapes.Point(
+            particle.center.x - particle.radius,
+            particle.center.y - particle.radius
+        )
+        right_bottom = util.shapes.Point(
+            particle.center.x + particle.radius,
+            particle.center.y + particle.radius
+        )
         self.bounding_box = util.shapes.Rectangle(left_up, right_bottom)
 
     def set_canvas(self, canvas: tkinter.Canvas) -> None:
@@ -27,7 +33,7 @@ class Mesh:
 
         self.border_width = border_width
 
-    def create(self) -> None:
+    def create_mesh(self) -> None:
         if self.canvas is None:
             print('No canvas to draw, use `set_canvas` method to set it.\n')
             return
@@ -43,12 +49,12 @@ class Mesh:
             width=self.border_width
         )
 
-    def draw(self) -> None:
+    def render_mesh(self) -> None:
         if self.canvas is None:
             print('No canvas to draw, use `set_canvas` method to set it.\n')
             return
         if self.id is None:
-            print('No entity created, use `create` method to create it.\n')
+            print('Mesh has not been created, use `create_mesh` method to create it.\n')
             return
 
         self.canvas.coords(
@@ -62,6 +68,6 @@ class Mesh:
         )
 
     def shift(self, x: float, y: float) -> None:
-        self.ball.shift(x, y)
+        self.particle.shift(x, y)
         self.bounding_box.shift(x, y)
 

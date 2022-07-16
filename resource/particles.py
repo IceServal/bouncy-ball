@@ -1,19 +1,18 @@
 import util.shapes
 
 
-class Physical_Ball(util.shapes.Circle):
-    ''' a ball has basically physical attributes '''
+class Particle(util.shapes.Circle):
+    ''' particle is a kind of circle which has basically 2D physical attributes '''
 
     def __init__(
         self
         , center: util.shapes.Point
         , radius: float
-        , density: float
+        , mass: float
         , velocity: util.shapes.Vector
     ):
         super().__init__(center, radius)
 
-        self.density  = density
-        self.mass     = density * self.area()
+        self.mass = mass
         self.velocity = velocity
 

@@ -2,7 +2,7 @@ import time
 import tkinter
 
 import resource.constants
-import resource.mesh
+import scene.mesh
 import util.shapes
 
 
@@ -12,22 +12,22 @@ class World:
         self.height = height
 
         self.board = tkinter.Tk()
-        self.board.title('2D ball world')
+        self.board.title('2D particle world')
 
         canvas_width  = width * resource.constants.SCALE
         canvas_height = height * resource.constants.SCALE
         self.canvas = tkinter.Canvas( self.board, width=canvas_width, height=canvas_height, bg='ivory')
         self.canvas.pack()
 
-        self.mesh_array = []
+        self.queue = []
 
-    def add_mesh(self, mesh: resource.mesh.Mesh) -> None:
-        self.mesh_array.append(mesh)
+    def add_mesh(self, cmd: scene.mesh.Draw_Command) -> None:
+        self.queue.append(cmd)
 
     def mainloop(self) -> None:
-        for mesh in self.mesh_array:
-            mesh.set_canvas(self.canvas)
-            mesh.create()
+        for cmd in self.queue:
+            cmd.set_canvas(self.canvas)
+            cmd.create_mesh()
 
         while True:
             time.sleep(resource.constants.DELTA_TIME)
@@ -36,16 +36,19 @@ class World:
             self._render()
 
     def _update(self) -> None:
-        ''' mesh update '''
+        ''' scene update '''
         self._ball_gravity()
         self._ball_collide_wall()
         self._ball_collide_ball()
         self._ball_shift()
 
+        for cmd in self.queue:
+            cmd.update_mesh()
+
     def _render(self) -> None:
         ''' mesh render '''
-        for mesh in self.mesh_array:
-            mesh.draw()
+        for cmd in self.queue:
+            cmd.render_mesh()
 
         self.canvas.update_idletasks()
         self.canvas.update()

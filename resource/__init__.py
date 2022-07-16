@@ -1,3 +1,3 @@
-import resource.balls
+import resource.particles
 import resource.world
 
